@@ -2,7 +2,9 @@
 
 ## Purpose
 
-Make best effort to deliver data *from* producer(s) *to* one or more HTTP servers. Queue messages and re-transmit to HTTP server(s) until acknowledged.
+Make best effort to HTTP POST data *from* producer(s) *to* one or more HTTP servers. Queue messages and re-transmit to HTTP server(s) until acknowledged.
+
+http-qp is designed for transfering small parcels of data 
 
 ## Overview
 
@@ -20,28 +22,42 @@ Remove from queue when message(s) are acknowledged by server. If queue reaches m
 ## Command line
 `http-qp destinationURL0 [destinationURL1]`
 
-APRS World uses `getopt(3)` and related `unistd.h` routines for argument evaluation.
-
-### Mandatory
+### Mandatory arguments
+-`[-d queueDirectory]` http-qp scratch directory. Must exist.
 
 One or more destination URLs. There are arguments not proceed by flags
 
 
-### Optional
-`-p [port]` TCP port to receive messages on
-`-s [NTP stratum level]` 0 to 16. 16 indicates not NTP syncronized
-`-t [timeout]` TCP port connection timeout in milliseconds. http-qp will close connection and discard message if timeout is reached
-`-n` Queue size in number of message
-`-v` Extra verbose output (output useful for debugging, but overkill for normal operation)
+### Optional arguements
+- `[-c cURL options]` options / arguments to pass to cURL
+
+- `[-p port]` TCP port to receive messages on
+
+- `[-s stratum]` 0 to 16. 16 indicates not NTP syncronized
+
+- `[-t timeout]` TCP port connection timeout in milliseconds. http-qp will close connection and discard message if timeout is reached
+
+- `[-n nMessages]` Queue size in number of message
+
+- `[-N nMaxMessagesToTransmit]` Maximum number of messages to transmit in a single HTTP post
+
+- `[-v]` Extra verbose output (output useful for debugging, but overkill for normal operation)
 
 
 ## Signals
 
-`SIGUSR1` dump human readable status
+- `SIGUSR1` dump human readable status
 
-`SIGPIPE` internal signal that is used to signify error with TCP connection
+- `SIGUSR2` attempt to send queue now
 
-`SIGALRM` internal signal that is used to signify timeout on incomming TCP data
+- `SIGPIPE` internal signal that is used to signify error with TCP connection
+
+- `SIGALRM` internal signal that is used to signify timeout on incomming TCP data
+
+Named signals can conveniently be sent for testing with something like:
+```
+killall -s SIGUSR1 http-qp
+```
 
 ## Output
 
@@ -67,8 +83,21 @@ All messages and arrays are encoded with `MessagePack` (https://msgpack.org/) en
 - message
 -- 1 to n bytes of 8-bit data
 
+## Acknowledgement protocol
+
+HTTP server will return with a `200` or `204` HTTP status code if message or array of messages was received. Upon receipt of this code, http-qp shall not transmit these message(s) again to this server. This is considered successful transmission.
+
+Any other response shall be considered unsuccessful and shall be reported with output message to stderr. 
+
+
+## Error handling
+
+In the event of a non-recoverable error, http-qp will exit with a non-zero return code. No attempt will be made to preserve queued messages.
+
 
 ## Notes to programmer
+
+- APRS World uses `getopt(3)` and related `unistd.h` routines for argument evaluation.
 
 - See nmeaReader.c (https://github.com/aprsworld/nmeaReader/blob/master/nmeaReader.c) for sample program with alarm handling, socket, getopt(3) command line argument parsing
 
@@ -79,7 +108,3 @@ All messages and arrays are encoded with `MessagePack` (https://msgpack.org/) en
 - Use GitHub "Issues" tracker (https://github.com/aprsworld/http-qp/issues)
 
 - Use `cmp` (https://github.com/camgunz/cmp) MessagePack library or equivalent in http-qp
-
-- Here is another bullet
-
-- Add another line as we are working in test-new-branch
