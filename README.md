@@ -81,3 +81,5 @@ All messages and arrays are encoded with `MessagePack` (https://msgpack.org/) en
 - Use `cmp` (https://github.com/camgunz/cmp) MessagePack library or equivalent in http-qp
 
 - Here is another bullet
+
+- Add another line as we are working in test-new-branch
