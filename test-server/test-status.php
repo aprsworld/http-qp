@@ -63,10 +63,12 @@ if (!function_exists('http_response_code')) {
 	}
 }
 
-if ( isset($_REQUEST['response_code']) && $_REQUEST['response_code'] >= 100 && $_REQUEST['response_code'] < 600 ) {
+if ( isset($_REQUEST['random']) && $_REQUEST['random'] >= 100 && $_REQUEST['random'] < 600 && rand(0,1) == 0 ) {
+	$response_code=$_REQUEST['random'];
+} else if ( isset($_REQUEST['response_code']) && $_REQUEST['response_code'] >= 100 && $_REQUEST['response_code'] < 600 ) {
 		$response_code = $_REQUEST['response_code'];
 } else {
-		$response_code=200;
+	$response_code=200;
 }
 
 
